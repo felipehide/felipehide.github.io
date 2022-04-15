@@ -1,4 +1,4 @@
-@import '../_sass/abstracts/_variables.scss';
+@import '../abstracts/_variables.scss';
 
 /*
  * Basic
@@ -123,5 +123,5 @@ hr {
     }
 }
 
-@import "../_sass/base/_typography.scss";
-@import "../_sass/components/_tables.scss";
+@import "_typography.scss";
+@import "../components/_tables.scss";
