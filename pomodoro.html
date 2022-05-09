@@ -1,0 +1,366 @@
+<!doctype html>
+<html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+</head>
+
+<body class="bg-dark text-white">
+    <div class="container">
+
+        <div class="text-center m-5">
+            <h1>Pomodoro</h1>
+        </div>
+       
+        <div class="d-grid">
+            <button id="edit-button" class="btn btn-dark btn-sm border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-timer" aria-expanded="true" aria-controls="edit-timer">
+                ↓ Settings ↓
+            </button>
+        </div>
+        <div class="collapse card text-center" id="edit-timer">
+            <div class="card-body bg-dark">
+                <div class="row">
+                    <div class="col">
+                        <h2>Set work time</h2>
+                        <div class="row justify-content-center">
+                            <div class="col-sm-auto p-0">
+                                <input id="work-min" class="form-control text-end bg-dark border-dark text-white fs-2 p-0" style="max-width:50px" value="25"></input id="work-min">
+                            </div>
+                            <div class="col-auto align-self-center fs-2">min</div>
+                            <!-- <div class="col-sm-auto p-0"> -->
+                                <!-- <input class="form-control" style="max-width:50px" value="0"></input> -->
+                                <!-- </div> -->
+                            </div>
+                        <button id="set-work" class="btn btn-secondary m-2">Set</button>
+                    </div>
+                    <div class="col">
+                        <h2>Set rest time</h2>
+                        <div class="row justify-content-center">
+                            <div class="col-sm-auto p-0">
+                               <input id="rest-min" class="form-control text-end bg-dark border-dark text-white fs-2 p-0" style="max-width:50px" value="5"></input id="rest-min">
+                            </div>
+                            <div class="col-auto align-self-center fs-2">min</div>
+                            <!-- <div class="col-sm-auto p-0"> -->
+                                <!-- <input class="form-control" style="max-width:50px" value="0"></input> -->
+                            <!-- </div> -->
+                            </div>
+                        <button id="set-rest" class="btn btn-secondary m-2">Set</button>
+                    </div>
+                    <div class="col">
+                        <h2>Set long rest time</h2>
+                        <div class="row justify-content-center">
+                            <div class="col-sm-auto p-0">
+                               <input id="rest-min" class="form-control text-end bg-dark border-dark text-white fs-2 p-0" style="max-width:50px" value="10"></input id="rest-long-min">
+                            </div>
+                            <div class="col-auto align-self-center fs-2">min</div>
+                            <!-- <div class="col-sm-auto p-0"> -->
+                                <!-- <input class="form-control" style="max-width:50px" value="0"></input> -->
+                            <!-- </div> -->
+                            </div>
+                        <button id="set-long-rest" class="btn btn-secondary m-2">Set</button>
+                    </div>
+                    <div class="col-2">
+                        <h2>Ring</h2>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="ring-radio" id="ring-long" onClick="RingSetting('long')" checked>
+                            <label class="form-check-label" for="ring-long">
+                                Long ring
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="ring-radio" id="ring-short" onClick="RingSetting('short')">
+                            <label class="form-check-label" for="ring-short">
+                                Short Ring
+                            </label>
+                        </div>
+                            <div class="form-check">
+                            <input class="form-check-input" type="radio" name="ring-radio" id="ring-none" onClick="RingSetting('none')">
+                            <label class="form-check-label" for="ring-none">
+                                No Ring
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                    <!-- rest-work ratio:  -->
+            </div>
+        </div>
+            
+        <div class="card text-center mt-3">
+            <div id="card-timer" class="card-body align-middle" style="background-color: #212529;">
+                <h2 id="status" class="card-title">Status</h2>
+                <p id="timer" class="fs-1">Timer</p>
+                <button id="button" class="btn btn-secondary">Start</button>
+                <br>
+                <button id="stop-ring" class="btn btn-secondary m-2" style="display:None;">Silence!</button>
+            </div>
+        </div>
+
+        <!-- <div class="d-grid mt-3">
+            <button id="about-button" class="btn btn-dark btn-sm border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#about" aria-expanded="true" aria-controls="about">
+                ↓ About ↓
+            </button>
+        </div>
+        <div id="about" class="collapse card text-centers">
+            <div class="card-body align-middle bg-dark">
+                <h2>About</h2>
+                A Pomodoro Timer that doesn't force you to stop working when the work cycle ends. 
+                Instead, it banks rest hours at a ratio of "work time":"rest time" that are used up at the next rest cycle.
+
+            </div>
+        </div>
+    </div> -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script>
+        var work_timer = 10*1000; // Time of work set by user
+        var work_left = work_timer; // Amount of work left, counting all pauses
+        var rest_timer = 5*1000; // Time of rest set by user
+        var rest_long_timer = 10*1000; // Time of the 4th (long) rest 
+        var rest_bank = 0; // Amount of rest banked up by working 
+        var rest_work_ratio = 5; // Relation between rest and work timers
+        var interval; // Global variable to count time
+        var cycles = 0; // Counts cycles to activate the long rest
+
+        var ring_option = "long";
+        var audio = new Audio('https://upload.wikimedia.org/wikipedia/commons/b/bc/Alarmclock-mechanical.ogg');
+
+        // 0 = Paused, waiting for work
+        // 1 = Counting Down Work
+        // 2 = Stocking Rest
+        // 3 = Paused, waiting for rest
+        // 4 = Resting
+        var status_flag = 0;
+
+        var Timer = { // Object to count time DOWN
+            remaining: 0,
+            start: function (total) {
+                var start = Date.now();
+                var wasd = start + total;
+                
+                interval = setInterval (function () {
+                    now = Date.now();
+                    this.remaining = wasd-now;
+                    work_left = this.remaining;
+
+                    // Display the result in the element with id="timer"
+                    document.getElementById("timer").innerHTML = time_conversion(this.remaining);            
+                    // Countdown has finished
+                    if (remaining < 0) {
+                        remaining = null;
+                        document.getElementById("timer").innerHTML = time_conversion(rest_timer+rest_bank);
+                        // console.log("countdown has finished on status " + status_flag);
+                        timer_callback();
+                    }
+                }, 100);
+            },
+            pause: function() {
+                clearInterval(interval);
+            },
+            resume: function(total) {
+                this.start(total);
+            }
+        };
+
+        var Counter = { // Object to count time UP
+            accumulated: 0,
+            // stack: 0,
+            start: function (rest_start) {
+                var start = Date.now();
+                accumulated = 0;
+                this.interval = setInterval (function () {
+                    now = Date.now();
+                    
+                    // this.stack = now-start;
+                    accumulated = (now-start)/rest_work_ratio;
+
+                    // console.log(accumulated);
+                    rest_bank = rest_start + accumulated;
+
+                    // Display the result in the element with id="timer"
+                    document.getElementById("timer").innerHTML = time_conversion(rest_bank)
+                    //  +
+                    // " + " + 
+                    // time_conversion(this.stack);
+                     
+                }, 100);
+            },
+            pause: function() {
+                clearInterval(this.interval);
+                delete this.interval;
+            },
+            resume: function() {
+                if (!this.interval) this.start();
+            }
+        };
+
+        function RingSetting(ring_option) {
+            if (ring_option == 'long') {
+                audio = new Audio('https://upload.wikimedia.org/wikipedia/commons/b/bc/Alarmclock-mechanical.ogg');
+            } 
+            else if (ring_option == 'short') {
+                audio = new Audio('https://upload.wikimedia.org/wikipedia/commons/b/bc/Alarmclock-mechanical.ogg');
+            }
+            else if (ring_option == 'none') {
+                audio = new Audio('https://upload.wikimedia.org/wikipedia/commons/b/bc/Alarmclock-mechanical.ogg');
+            }
+        }
+
+        // Calculates and formats the hr:min:sec thing from a ms format
+        function time_conversion (original_time) {
+
+            hours = Math.floor((original_time % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            minutes = Math.floor((original_time % (1000 * 60 * 60)) / (1000 * 60));
+            seconds = Math.floor((original_time % (1000 * 60)) / 1000);
+
+            if (hours > 0) {
+                converted_time = ('0'  + hours).slice(-2)+':'+('0'  + minutes).slice(-2)+':'+('0' + seconds).slice(-2);
+            }
+            else {
+                converted_time = ('0'  + minutes).slice(-2)+':'+('0' + seconds).slice(-2);
+            }
+            return converted_time;
+        }
+        
+        // Called when the timer has ended
+        function timer_callback () {
+            switch(status_flag) {
+                case 1: // Finished work timer, start stocking rest
+                    // console.log("timer  callback: status " + status_flag);
+                    
+                    clearInterval(interval);
+                    // delete interval;
+
+                    document.getElementById("status").innerHTML = "Stocking rest";
+                    document.getElementById("button").innerHTML = "REST";
+                    document.getElementById("card-timer").style.backgroundColor = "#7d6608";
+                    audio.fastSeek(1);
+                    audio.play();
+
+                    console.log(cycles);
+                    if (cycles == 3) {
+                        rest_start = rest_long_timer;
+                        Counter.start(rest_start);
+                        cycles = 0;
+                    }
+                    else {
+                        rest_start = rest_timer;
+                        Counter.start(rest_start);
+                        cycles++;
+                    }
+
+                    document.getElementById("stop-ring").style.display = "show";
+                    status_flag = 2;
+                    break;
+                case 3: // Resting
+                    // console.log("timer  callback: status " + status_flag);
+                    document.getElementById("status").innerHTML = "Procastinating";
+                    document.getElementById("button").innerHTML = "WORK";
+                    document.getElementById("timer").innerHTML = time_conversion(work_timer);
+                    document.getElementById("card-timer").style.backgroundColor = "#78281f";
+                    audio.play();
+                    rest_bank = 0;
+
+                    clearInterval(interval);
+                    work_left = work_timer;
+                    status_flag = 0;
+                    break;
+                }
+            }
+
+        document.getElementById("button").onclick = function () {
+            switch(status_flag) {
+                case 0: // Paused, waiting for work, press to work
+                    // console.log("buttom press: status " + status_flag);
+                    document.getElementById("status").innerHTML = "Working";
+                    document.getElementById("button").innerHTML = "PAUSE WORK";
+                    // document.getElementById("card-timer").innerHTML = "PAUSE WORK";
+                    // return_flag = countdown(10*1000);
+                    document.getElementById("card-timer").style.backgroundColor = "#154360";
+                    document.getElementById("stop-ring").style.display = "show";
+                    Timer.resume(work_left);
+                    status_flag = 1;
+                    break;
+                case 1: // Working, press to pause work
+                    // console.log("buttom press: status " + status_flag);
+                    document.getElementById("status").innerHTML = "Work Paused";
+                    document.getElementById("button").innerHTML = "RESUME WORK";
+                    document.getElementById("card-timer").style.backgroundColor = "#212529";
+                    // return_flag = countdown(rest_bank);
+                    Timer.pause();
+                    status_flag = 0;
+                    break;
+                case 2: // Working and stocking rest, press to start resting
+                    // console.log("buttom press: status " + status_flag);
+                    document.getElementById("status").innerHTML = "Resting";
+                    document.getElementById("button").innerHTML = "PAUSE REST";
+                    document.getElementById("card-timer").style.backgroundColor = "#0b5345";
+                    Counter.pause();
+                    Timer.start(rest_bank);
+                    status_flag = 3;
+                    break;
+                case 3: // Resting, press to pause rest
+                    // console.log("buttom press: status " + status_flag);
+                    document.getElementById("status").innerHTML = "Paused Resting";
+                    document.getElementById("button").innerHTML = "RESUME REST";
+                    document.getElementById("card-timer").style.backgroundColor = "#212529";
+                    Timer.pause();
+                    status_flag = 4;
+                    break;
+                case 4: // Paused resting, press to resume resting
+                    // console.log("buttom press: status " + status_flag);
+                    document.getElementById("status").innerHTML = "Resting";
+                    document.getElementById("button").innerHTML = "PAUSE REST";
+                    document.getElementById("card-timer").style.backgroundColor = "#0b5345";
+                    Timer.resume(work_left);
+                    status_flag=3;
+                    break;
+            }
+        };
+        
+        document.getElementById("set-work").onclick = function() {
+            work_min = document.getElementById("work-min").value;
+            work_timer = work_min * 60 * 1000;
+            console.log(work_timer);
+        }
+        
+        document.getElementById("set-rest").onclick = function() {
+            rest_min = document.getElementById("rest-min").value;
+            rest_timer = rest_min * 60 * 1000;
+            console.log(rest_timer);
+        }
+
+        document.getElementById("set-long-rest").onclick = function() {
+            rest_min = document.getElementById("rest-long-min").value;
+            rest_timer = rest_min * 60 * 1000;
+            console.log(rest_timer);
+        }
+
+        document.getElementById("stop-ring").onclick = function() {
+            audio.pause();
+            rest_timer = rest_min * 60 * 1000;
+            console.log(rest_timer);
+        }
+
+        // document.getElementById("ring-").onclick = function() {
+        //     console.log("changed ring");
+        // }
+
+        // document.getElementById("edit-button").onclick = function() {
+        //     console.log(this.getAttribute("aria-expanded"));
+        //     if (this.getAttribute("aria-expanded") == false) {
+        //         console.log("down");
+        //         document.getElementById("edit-button").innerHTML = "↓ Edit timers ↓";
+        //     } else {
+        //         console.log("up");
+        //         document.getElementById("edit-button").innerHTML = "↑ Edit timers ↑";
+        //     }
+        // }
+        
+        // 
+        // https://stackoverflow.com/questions/29971898/how-to-create-an-accurate-timer-in-javascript
+        // https://code.likeagirl.io/how-to-make-a-server-side-timer-with-phoenix-websockets-96d0e1e56f2d
+        // https://stackoverflow.com/questions/32307483/in-javascript-how-to-create-an-accurate-timer-with-milliseconds
+        
+    </script>
+</body>
+</html>
